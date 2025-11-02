@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UmaTool | Discord 便利ツールサイト</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .tab-button {
+            border-bottom: 3px solid transparent;
+        }
+        .tab-button.active {
+            border-bottom-color: #4f46e5;
+            color: #4f46e5;
+            font-weight: 600;
+        }
+        /* リッチメッセージカラープレビュー用 */
+        #rich-color-preview {
+            width: 100%;
+            height: 10px;
+            margin-top: 5px;
+            border-radius: 4px;
+        }
+        /* 画像プレビュー (入力フォーム横) */
+        #image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        /* ==================================== */
+        /* Discord UI 模擬スタイル */
+        /* ==================================== */
+        .discord-channel {
+            background-color: #313338; /* Discord dark mode background */
+            color: #dbdee1;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+        .discord-message {
+            display: flex;
+            margin-bottom: 16px;
+        }
+        .discord-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #5865f2; /* Discord default color */
+            margin-right: 12px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            /* アイコンURLが設定された場合に備えて、画像の表示も可能に */
+            object-fit: cover;
+        }
+        .discord-content-area {
+            flex-grow: 1;
+        }
+        .discord-username {
+            font-weight: 500;
+            color: #ffffff;
+            font-size: 15px;
+            margin-right: 8px;
+        }
+        .discord-time {
+            color: #949ba4;
+            font-size: 12px;
+        }
+        .discord-text {
+            line-height: 1.4;
+            word-wrap: break-word;
+            font-size: 15px;
+        }
+        .discord-embed {
+            max-width: 500px;
+            margin-top: 8px;
+            border-radius: 4px;
+            background-color: #2b2d31; /* Embed background */
+            display: flex;
+            border-left: 4px solid #5865f2; /* Default color bar */
+            padding: 8px 12px;
+            overflow: hidden;
+            word-wrap: break-word;
+        }
+        .discord-embed-content {
+            flex-grow: 1;
+            padding-left: 4px;
+        }
+        .discord-embed-title {
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .discord-embed-description {
+            color: #dbdee1;
+            font-size: 13px;
+        }
+        .discord-timestamp-preview {
+            background-color: #40444b;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            color: #ffffff;
+            font-weight: 500;
+        }
+        
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        
+        <div id="tos-screen" class="bg-white p-8 md:p-10 rounded-xl shadow-2xl border-t-8 border-red-500">
+            <h1 class="text-4xl font-extrabold text-red-700 mb-2">禁止事項</h1>
+            <p class="text-lg text-gray-600 mb-8 border-b pb-4">本ツールをご使用になられる前に必ず確認し、同意してください。</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-red-50 p-5 rounded-lg border-2 border-red-300 shadow-lg">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L12 12m0 0L5.636 5.636" />
+                        </svg>
+                        <h2 class="text-xl font-bold text-red-800">誹謗中傷行為の禁止</h2>
+                    </div>
+                    <p class="text-sm text-gray-700">このツールを使い、他人がいるサーバーに暴言や悪口を送信することを禁止します。</p>
+                </div>
+
+                <div class="bg-red-50 p-5 rounded-lg border-2 border-red-300 shadow-lg">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h2 class="text-xl font-bold text-red-800">スパム行為の禁止</h2>
+                    </div>
+                    <p class="text-sm text-gray-700">このツールを使い、管理者ではないサーバーに大量のメッセージを送信し、迷惑をかけることを禁止します。</p>
+                </div>
+
+                <div class="bg-red-50 p-5 rounded-lg border-2 border-red-300 shadow-lg">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 14h18M5 17h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <h2 class="text-xl font-bold text-red-800">法令違反行為の禁止</h2>
+                    </div>
+                    <p class="text-sm text-gray-700">このツールを使い、違法URLの送信等を禁止します。</p>
+                </div>
+            </div>
+            
+            <p class="mt-8 text-sm text-gray-500 text-center">
+                「同意して利用開始」を押すと、これらの禁止事項を順守することに同意したものとみなされます
+            </p>
+
+            <div class="mt-8 flex justify-center space-x-6">
+                <button id="disagree-button" class="px-8 py-3 bg-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-400 transition shadow-lg">同意しない</button>
+                <button id="agree-button" class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition shadow-lg">✅同意して利用を開始する</button>
+            </div>
+        </div>
+
+        <div id="app-container" class="hidden">
+            
+            <h1 class="text-3xl font-extrabold text-indigo-800 mb-4 text-center">UmaTool</h1>
+
+            <nav class="bg-white rounded-t-xl shadow-xl border-b border-gray-200 sticky top-0 z-10">
+                <div id="navbar" class="flex space-x-8 px-6 pt-4 text-center overflow-x-auto whitespace-nowrap">
+                    <button id="tab-welcome" class="tab-button py-3 px-1 text-gray-500 hover:text-indigo-600 transition" data-tool="none">
+                        ホーム
+                    </button>
+                    <button id="tab-main" class="tab-button py-3 px-1 text-gray-500 hover:text-indigo-600 transition" data-tool="webhook">
+                        Webhookからメッセージ送信
+                    </button>
+                    <button id="tab-unix" class="tab-button py-3 px-1 text-gray-500 hover:text-indigo-600 transition" data-tool="unix">
+                        Unixタイムスタンプ変換
+                    </button>
+                    
+                    <button id="tab-webhook-details" class="tab-button py-3 px-1 text-gray-500 hover:text-indigo-600 transition hidden" data-tool="webhook">
+                        説明
+                    </button>
+                     <button id="tab-unix-details" class="tab-button py-3 px-1 text-gray-500 hover:text-indigo-600 transition hidden" data-tool="unix">
+                        説明
+                    </button>
+                </div>
+            </nav>
+
+            <div id="content-area" class="bg-white p-6 md:p-8 rounded-b-xl shadow-2xl border-t-4 border-white">
+                
+                <div id="welcome-content" class="tab-content">
+                    <h2 class="text-3xl font-bold text-indigo-700 mb-4 flex items-center">
+                        UmaToolへようこそ
+                    </h2>
+                    <p class="text-lg text-gray-600 mb-8 border-b pb-4">
+                        Discordで使える便利サイトです。
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-5 bg-indigo-50 rounded-lg border border-indigo-200">
+                            <h3 class="text-xl font-bold text-indigo-800 mb-2">Webhook メッセージ送信</h3>
+                            <p class="text-gray-700 text-sm">
+                                 Webhookからメッセージや埋め込みを送信できます。
+                            </p>
+                            <button onclick="switchTab('main')" class="mt-3 text-sm font-semibold text-indigo-600 hover:text-indigo-800 flex items-center">
+                                ツールを使用する
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="p-5 bg-blue-50 rounded-lg border border-blue-200">
+                            <h3 class="text-xl font-bold text-blue-800 mb-2">Unixタイムスタンプ変換</h3>
+                            <p class="text-gray-700 text-sm">
+                                指定した日付や日時を、Discordのタイムスタンプに変換できます。
+                            </p>
+                            <button onclick="switchTab('unix')" class="mt-3 text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center">
+                                ツールを使用する
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="main-content" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold text-indigo-700 mb-4">Webhook メッセージ・埋め込み送信</h2>
+                    <p class="text-gray-600 mb-6 text-sm">
+                        スパムなどの悪用はしないようお願い致します。
+                    </p>
+
+                    <div class="mb-8 p-4 bg-gray-200 rounded-lg border-2 border-gray-300">
+                        <h3 class="text-lg font-bold text-gray-800 mb-3">プレビュー</h3>
+                        <div class="discord-channel">
+                            <div class="discord-message">
+                                <div id="preview-avatar" class="discord-avatar">U</div>
+                                <div class="discord-content-area">
+                                    <div class="flex items-baseline">
+                                        <span id="preview-username" class="discord-username" style="color: #5865f2;">Test Bot</span>
+                                        <span class="discord-time">たった今</span>
+                                    </div>
+                                    
+                                    <div id="preview-content-text" class="discord-text">（ここに入力されたテキストが表示されます）</div>
+                                    
+                                    <div id="preview-embed-container" class="mt-2 hidden">
+                                        <div id="preview-embed" class="discord-embed" style="border-left-color: #4f46e5;">
+                                            <div class="discord-embed-content">
+                                                <div id="preview-embed-title" class="discord-embed-title">（ここに埋め込みのタイトルが表示されます）</div>
+                                                <div id="preview-embed-description" class="discord-embed-description">（ここに埋め込みの本文が表示されます）</div>
+                                            </div>
+                                        </div>
+                                        <img id="preview-embed-image" src="" alt="添付画像プレビュー" class="mt-4 max-w-full h-auto rounded-lg hidden" style="max-width: 400px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="message-container" class="mb-4 hidden">
+                        <div id="message-box" class="p-3 rounded-lg text-sm font-medium"></div>
+                    </div>
+
+                    <form id="webhook-form" class="space-y-6">
+                        
+                        <div>
+                            <label for="webhook-url" class="block text-sm font-bold text-gray-700 mb-1">
+                                Discord Webhook URL <span class="text-red-500">*</span>
+                            </label>
+                            <input type="url" id="webhook-url" required 
+                                placeholder="https://discord.com/api/webhooks/...のURLを入力"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition duration-150">
+                            <p id="webhook-info-warning" class="mt-2 text-xs text-bule-500">
+                                UmaToolは、お客様が入力されたURLを保存、閲覧はできません。ご安心ください。                            </p>
+                        </div>
+                        
+                        <div>
+                            <label for="message-content" class="block text-sm font-bold text-gray-700 mb-1">
+                                送信したいメッセージ（任意・送信しない場合は空白にしてください。）
+                            </label>
+                            <textarea id="message-content" rows="3"
+                                placeholder="ここに送信したいメッセージを入力"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition duration-150"></textarea>
+                        </div>
+
+                        <div>
+                             <label for="image-url" class="block text-sm font-bold text-gray-700 mb-1">
+                                画像を送信（任意・送信しない場合は空白にしてください。）
+                            </label>
+                            <input type="url" id="image-url" 
+                                placeholder="画像ファイルのURLを入力してください。（入手方法は他のサイトをご覧ください。）"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition duration-150">
+                            <img id="image-preview" class="hidden" alt="画像プレビュー">
+                        </div>
+                        
+                        <div class="border-t pt-4">
+                            <button type="button" id="rich-toggle" class="flex items-center justify-between w-full p-3 bg-gray-100 rounded-lg text-indigo-700 font-semibold hover:bg-gray-200 transition">
+                                <span>埋め込みメッセージ（任意・送信しない場合は空白にしてください。）</span>
+                                <svg id="rich-arrow" class="w-5 h-5 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            <div id="rich-fields" class="mt-4 p-4 border border-indigo-200 rounded-lg bg-indigo-50 space-y-4 hidden">
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="rich-title" class="block text-sm font-medium text-gray-700 mb-1">タイトル</label>
+                                        <input type="text" id="rich-title" placeholder="埋め込みメッセージのタイトル" class="w-full px-3 py-2 border rounded-lg text-sm">
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="rich-color" class="block text-sm font-medium text-gray-700 mb-1">
+                                            メッセージ横のカラーバー (Hex: #RRGGBB)
+                                        </label>
+                                        <input type="color" id="rich-color" value="#4f46e5" class="w-full h-10 p-0 border-none rounded-lg cursor-pointer">
+                                        <div id="rich-color-preview" style="background-color: #4f46e5;"></div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label for="rich-description" class="block text-sm font-medium text-gray-700 mb-1">説明文</label>
+                                    <textarea id="rich-description" rows="4" placeholder="埋め込みメッセージのメインの説明文" class="w-full px-3 py-2 border rounded-lg text-sm"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="send-button"
+                                class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg shadow-lg hover:bg-indigo-700 transition duration-150 ease-in-out disabled:opacity-50 flex items-center justify-center">
+                            メッセージを送信
+                        </button>
+                    </form>
+                </div>
+
+                <div id="webhook-details-content" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold text-indigo-700 mb-4">Webhook 送信機能の詳しい説明</h2>
+                    <p class="text-gray-600 mb-6 text-sm">
+                        
+                    </p>
+
+                    <ol class="list-decimal list-inside text-gray-700 space-y-6 text-base p-4 bg-gray-50 rounded-lg border">
+                        <li class="font-semibold text-gray-800">
+                            Webhook URLの準備
+                            <p class="font-normal mt-1 text-sm text-gray-600">
+                                メッセージを投稿したいDiscordチャンネルの設定（歯車アイコン）から「連携」→「ウェブフック」を作成し、表示されたURL（`https://discord.com/api/webhooks/...`）をコピーします。このURLは、外部からメッセージを送信するための秘密の鍵です。
+                            </p>
+                        </li>
+                    </ol>
+                </div>
+
+ 
+                <div id="unix-content" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold text-blue-700 mb-4">Unixタイムスタンプ変換ツール</h2>
+                    <p class="text-gray-600 mb-6 text-sm">
+                        指定した日付や日時を、Discordのタイムスタンプに変換できます。
+                    </p>
+
+                    <div class="mb-8 p-4 bg-gray-200 rounded-lg border-2 border-gray-300">
+                        <h3 class="text-lg font-bold text-gray-800 mb-3">プレビュー</h3>
+                        <div class="discord-channel">
+                            <div class="discord-message">
+                                <div class="discord-avatar" style="background-color: #f29c42;">T</div>
+                                <div class="discord-content-area">
+                                    <div class="flex items-baseline">
+                                        <span class="discord-username" style="color: #f29c42;">Test Bot</span>
+                                        <span class="discord-time" id="unix-current-time-display">たった今</span>
+                                    </div>
+                                    <div class="discord-text space-y-3">
+                                        <p>
+                                            <span id="unix-realtime-display" class="discord-timestamp-preview">（ここに入力した日付、時間が表示されます。）</span>
+                                        </p>
+                                        <p class="text-sm text-gray-400 mt-2"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label for="date-input" class="block text-sm font-bold text-gray-700 mb-1">日付</label>
+                                <input type="date" id="date-input" class="w-full px-4 py-2 border rounded-lg focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label for="time-input" class="block text-sm font-bold text-gray-700 mb-1">時刻 (任意)</label>
+                                <input type="time" id="time-input" class="w-full px-4 py-2 border rounded-lg focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label for="style-select" class="block text-sm font-bold text-gray-700 mb-1">表示形式</label>
+                                <select id="style-select" class="w-full px-4 py-2 border rounded-lg focus:ring-indigo-500 bg-white">
+                                    <option value="F" selected>F - 完全な形式</option>
+                                    <option value="f">f - 短い日時</option>
+                                    <option value="D">D - 長い日付</option>
+                                    <option value="d">d - 短い日付</option>
+                                    <option value="T">T - 長い時刻</option>
+                                    <option value="t">t - 短い時刻</option>
+                                    <option value="R">R - 相対時間</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <button id="convert-button" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-lg hover:bg-blue-700 transition duration-150">
+                            Unixタイムスタンプコードを生成
+                        </button>
+
+                        <div id="result-area" class="mt-8 p-4 bg-green-50 border-2 border-green-300 rounded-lg hidden">
+                            <label class="block text-sm font-bold text-green-800 mb-2">
+                                Discord貼り付け用コード
+                            </label>
+                            <div class="flex space-x-2">
+                                <input type="text" id="output-discord" readonly 
+                                    class="flex-grow px-3 py-2 border border-green-300 rounded-lg bg-white text-gray-800 text-sm font-mono cursor-pointer" 
+                                    onclick="this.select(); document.execCommand('copy');">
+                                <button id="copy-button" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm">
+                                    コピー
+                                </button>
+                            </div>
+                            <p class="mt-2 text-sm text-gray-700 font-medium">
+                                このコードをDiscordに貼り付けると、プレビューと同じように、Discordでも表示されます。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="unix-details-content" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold text-blue-700 mb-4">Unixタイムスタンプ変換機能の詳しい説明</h2>
+                    <div class="mt-6 p-4 bg-gray-50 border-l-4 border-blue-400 rounded-lg">
+                        <h3 class="text-xl font-bold text-blue-700 mb-3">Unixタイムスタンプとは？</h3>
+                        <p class="text-sm text-gray-700">
+                            Unixタイムスタンプは、1970年1月1日 00:00:00 UTC（協定世界時）からの経過秒数で時間を表す数値です。この数値を使うことで、世界中のユーザーがそれぞれのローカルタイムで正確な日時を確認できます。
+                        </p>
+                        <p class="text-sm text-gray-700 mt-2">
+                            このツールは、指定された日時をこの数値に変換し、さらにDiscordが解釈できる形式（＜t:数値:スタイル＞）に整形します。
+                                （ここら辺はややこしいので興味のある方はお読みください。）
+                        </p>
+                    </div>
+
+                    <div class="mt-6">
+                        <h3 class="text-xl font-bold text-blue-700 mb-3">🔢 Discordの表示スタイル</h3>
+                        <p class="text-sm text-gray-700 mb-2">
+                            日時表示のスタイルは、スタイルセレクタで選ぶことができます。
+                        </p>
+                        <table class="min-w-full divide-y divide-gray-200 border">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">コード</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">説明</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">形式</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200 text-sm text-gray-700">
+                                <tr><td class="px-6 py-4 font-mono">`F`</td><td class="px-6 py-4">完全な形式</td><td class="px-6 py-4">2024年1月1日 (月) 12:00 PM</td></tr>
+                                <tr><td class="px-6 py-4 font-mono">`R`</td><td class="px-6 py-4">相対時間</td><td class="px-6 py-4">2時間前 / 明日</td></tr>
+                                <tr><td class="px-6 py-4 font-mono">`d`</td><td class="px-6 py-4">短い日付</td><td class="px-6 py-4">01/01/2024</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+
+    <script>
+        // ==============================================
+        // 画面切り替えロジック
+        // ==============================================
+        const tosScreen = document.getElementById('tos-screen');
+        const appContainer = document.getElementById('app-container');
+        const agreeButton = document.getElementById('agree-button');
+        const disagreeButton = document.getElementById('disagree-button');
+
+        agreeButton.addEventListener('click', () => {
+            tosScreen.classList.add('hidden');
+            appContainer.classList.remove('hidden');
+            document.getElementById('tab-welcome').click();
+            updateUnixCodePreview(); // Unixコードリアルタイムプレビューを初期化
+            updateWebhookPreview(); // Webhookプレビューを初期化
+        });
+
+        disagreeButton.addEventListener('click', () => {
+            alert('このタブを閉じてください。');
+        });
+
+        // ==============================================
+        // タブ切り替えロジック (省略)
+        // ==============================================
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const activeTool = button.getAttribute('data-tool');
+
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.add('hidden'));
+
+                button.classList.add('active');
+
+                document.querySelectorAll('.tab-button[data-tool]:not([data-tool="none"])').forEach(toolTab => {
+                    if (toolTab.getAttribute('data-tool') === activeTool) {
+                        toolTab.classList.remove('hidden');
+                    } else {
+                        toolTab.classList.add('hidden');
+                    }
+                });
+
+                const targetId = button.id.replace('tab-', '') + '-content';
+                const targetContent = document.getElementById(targetId);
+                
+                if (targetContent) {
+                    targetContent.classList.remove('hidden');
+                }
+            });
+        });
+
+        function switchTab(tabName) {
+            const targetButton = document.getElementById(`tab-${tabName}`);
+            if (targetButton) {
+                targetButton.click();
+            }
+        }
+        
+        // ==============================================
+        // Webhook リアルタイムプレビューロジック (変更なし)
+        // ==============================================
+        const messageContentInput = document.getElementById('message-content');
+        const richTitleInput = document.getElementById('rich-title');
+        const richDescriptionInput = document.getElementById('rich-description');
+        const richColorInput = document.getElementById('rich-color');
+        const imageUrlInput = document.getElementById('image-url');
+        const richFields = document.getElementById('rich-fields');
+        const richArrow = document.getElementById('rich-arrow');
+        const richColorPreview = document.getElementById('rich-color-preview');
+        const imagePreview = document.getElementById('image-preview'); 
+        const webhookUrlInput = document.getElementById('webhook-url');
+        const webhookInfoWarning = document.getElementById('webhook-info-warning');
+
+        // Discordプレビュー要素
+        const previewContentText = document.getElementById('preview-content-text');
+        const previewEmbedContainer = document.getElementById('preview-embed-container');
+        const previewEmbed = document.getElementById('preview-embed');
+        const previewEmbedTitle = document.getElementById('preview-embed-title');
+        const previewEmbedDescription = document.getElementById('preview-embed-description');
+        const previewEmbedImage = document.getElementById('preview-embed-image');
+        const previewAvatar = document.getElementById('preview-avatar');
+        const previewUsername = document.getElementById('preview-username');
+        
+        // **🚨 Webhook情報取得ロジック (CORS制限のため無効)**
+        function fetchWebhookInfo(url) {
+            if (!url.startsWith('https://discord.com/api/webhooks/')) {
+                previewUsername.textContent = 'UmaTool Bot';
+                previewAvatar.textContent = 'U';
+                previewAvatar.style.backgroundImage = 'none';
+                previewAvatar.classList.remove('bg-gray-700');
+                return;
+            }
+
+            webhookInfoWarning.classList.remove('hidden');
+            
+            // 実際にはCORSエラーにより、このfetchは失敗します。（省略）
+            previewUsername.textContent = 'UmaTool Bot';
+            previewAvatar.textContent = 'U';
+            previewAvatar.style.backgroundImage = 'none';
+            previewAvatar.style.backgroundColor = '#5865f2';
+        }
+        
+        // プレビューを更新する関数
+        function updateWebhookPreview() {
+            const content = messageContentInput.value.trim();
+            const title = richTitleInput.value.trim();
+            const description = richDescriptionInput.value.trim();
+            const color = richColorInput.value;
+            const imageUrl = imageUrlInput.value.trim();
+            
+            fetchWebhookInfo(webhookUrlInput.value.trim());
+
+            if (content) {
+                previewContentText.innerHTML = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                previewContentText.classList.remove('hidden');
+            } else {
+                previewContentText.innerHTML = '（ここにプレーンテキストが表示されます）';
+            }
+            
+            const isEmbedActive = title || description;
+
+            if (isEmbedActive || imageUrl) {
+                previewEmbedContainer.classList.remove('hidden');
+                previewEmbed.style.borderLeftColor = color;
+                
+                previewEmbedTitle.textContent = title || '（ここにタイトルが表示されます）';
+                previewEmbedDescription.textContent = description || '（ここに説明文が表示されます）';
+                
+                if (imageUrl && (imageUrl.startsWith('http') || imageUrl.startsWith('data:'))) {
+                    previewEmbedImage.src = imageUrl;
+                    previewEmbedImage.classList.remove('hidden');
+                } else {
+                    previewEmbedImage.src = '';
+                    previewEmbedImage.classList.add('hidden');
+                }
+
+            } else {
+                 previewEmbedContainer.classList.add('hidden');
+            }
+
+            if (!content && !isEmbedActive && !imageUrl) {
+                 previewContentText.textContent = '（ここにプレーンテキストが表示されます）';
+            }
+        }
+        
+        // フォーム要素にイベントリスナーを追加 (省略)
+        webhookUrlInput.addEventListener('input', updateWebhookPreview);
+        messageContentInput.addEventListener('input', updateWebhookPreview);
+        richTitleInput.addEventListener('input', updateWebhookPreview);
+        richDescriptionInput.addEventListener('input', updateWebhookPreview);
+        richColorInput.addEventListener('input', () => {
+             richColorPreview.style.backgroundColor = richColorInput.value;
+             updateWebhookPreview();
+        });
+
+        // ==============================================
+        // リッチメッセージ トグルロジック (変更なし)
+        // ==============================================
+        const richToggle = document.getElementById('rich-toggle');
+        richToggle.addEventListener('click', () => {
+            const isHidden = richFields.classList.toggle('hidden');
+            richArrow.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+        });
+        
+        // ==============================================
+        // 画像URL プレビューロジック (変更なし)
+        // ==============================================
+        imageUrlInput.addEventListener('input', (e) => {
+            const url = e.target.value.trim();
+            if (url && (url.startsWith('http') || url.startsWith('data:'))) {
+                imagePreview.src = url;
+                imagePreview.classList.remove('hidden');
+                imagePreview.onerror = () => {
+                    imagePreview.classList.add('hidden');
+                    updateWebhookPreview(); 
+                };
+            } else {
+                imagePreview.classList.add('hidden');
+                imagePreview.src = '';
+            }
+            updateWebhookPreview();
+        });
+
+
+        // ==============================================
+        // Webhook 送信ロジック (省略)
+        // ==============================================
+        const form = document.getElementById('webhook-form');
+        const messageContainer = document.getElementById('message-container');
+        const messageBox = document.getElementById('message-box');
+        const sendButton = document.getElementById('send-button');
+
+        form.addEventListener('submit', function(e) {
+            // ... 送信ロジック (省略) ...
+            e.preventDefault();
+            const webhookUrl = webhookUrlInput.value.trim();
+            const messageContent = messageContentInput.value.trim();
+            const richTitle = richTitleInput.value.trim();
+            const richDescription = richDescriptionInput.value.trim();
+            const richColor = richColorInput.value;
+            const imageUrl = imageUrlInput.value.trim();
+            
+            if (!webhookUrl || (!messageContent && !richTitle && !richDescription && !imageUrl) || !webhookUrl.startsWith('https://discord.com/api/webhooks/')) {
+                 showMessage('Webhook URLまたはメッセージ内容を確認してください。', 'error');
+                return;
+            }
+
+            sendButton.disabled = true;
+            sendButton.textContent = '送信中...';
+
+            let payload = {};
+            let embeds = [];
+            
+            if (messageContent) { payload.content = messageContent; }
+            if (richTitle || richDescription || imageUrl) {
+                const colorDecimal = parseInt(richColor.replace('#', ''), 16);
+                const richMessage = {
+                    title: richTitle || undefined,
+                    description: richDescription || undefined,
+                    color: colorDecimal,
+                };
+                if (imageUrl) {
+                    richMessage.image = { url: imageUrl };
+                }
+                if (richMessage.title || richMessage.description || richMessage.image) {
+                     embeds.push(richMessage);
+                }
+            }
+            if (embeds.length > 0) { payload.embeds = embeds; }
+            if (!payload.content && !payload.embeds) {
+                showMessage('送信するメッセージ内容が空です。', 'error');
+                sendButton.disabled = false;
+                sendButton.textContent = 'メッセージを送信';
+                return;
+            }
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            })
+            .then(response => {
+                if (response.ok) {
+                    showMessage('✅ メッセージをDiscordに送信しました！', 'success');
+                    messageContentInput.value = ''; 
+                    richTitleInput.value = '';
+                    richDescriptionInput.value = '';
+                    imageUrlInput.value = ''; 
+                    imagePreview.classList.add('hidden');
+                    updateWebhookPreview();
+                } else {
+                    return response.json().then(errorData => {
+                        const errorMsg = errorData.message || 'Webhook URLが無効か、送信内容に問題があります。';
+                        showMessage('❌ 送信に失敗しました: ' + errorMsg, 'error');
+                    }).catch(() => {
+                        showMessage('❌ 送信に失敗しました。Webhook URLが正しいか確認してください。（HTTP ' + response.status + '）', 'error');
+                    });
+                }
+            })
+            .catch(error => {
+                showMessage('❌ ネットワークエラーが発生しました。インターネット接続を確認してください。', 'error');
+            })
+            .finally(() => {
+                sendButton.disabled = false;
+                sendButton.textContent = 'メッセージを送信';
+            });
+        });
+        
+        function showMessage(text, type) {
+            // ... showMessage ロジック (省略) ...
+            const messageBox = document.getElementById('message-box');
+            const messageContainer = document.getElementById('message-container');
+            
+            messageBox.textContent = text;
+            messageContainer.classList.remove('hidden');
+            
+            messageBox.className = 'p-3 rounded-lg text-sm font-medium';
+            if (type === 'success') {
+                messageBox.classList.add('bg-green-100', 'text-green-800');
+            } else if (type === 'error') {
+                messageBox.classList.add('bg-red-100', 'text-red-800');
+            } else {
+                messageBox.classList.add('bg-blue-100', 'text-blue-800');
+            }
+
+            setTimeout(() => {
+                messageContainer.classList.add('hidden');
+            }, 5000);
+        }
+
+        // ==============================================
+        // Unixタイムスタンプ変換ロジック (メイン修正箇所)
+        // ==============================================
+        const dateInput = document.getElementById('date-input');
+        const timeInput = document.getElementById('time-input');
+        const styleSelect = document.getElementById('style-select');
+        const convertButton = document.getElementById('convert-button');
+        const resultArea = document.getElementById('result-area');
+        const outputDiscord = document.getElementById('output-discord');
+        const copyButton = document.getElementById('copy-button');
+        
+        // リアルタイムプレビュー要素
+        const unixRealtimeDisplay = document.getElementById('unix-realtime-display');
+        const unixCurrentTimeDisplay = document.getElementById('unix-current-time-display');
+
+
+        /**
+         * Unixリアルタイムコードプレビューを更新する関数
+         * この関数が入力内容の変更と毎秒の更新を担います。
+         */
+        function updateUnixCodePreview() {
+            const dateStr = dateInput.value;
+            let timeStr = timeInput.value;
+            const style = styleSelect.value;
+            const lang = navigator.language;
+            const now = new Date(); // 現在時刻を取得
+
+            // 1. ユーザー名の横の時刻を更新 (常に現在時刻)
+            unixCurrentTimeDisplay.textContent = now.toLocaleTimeString(lang, {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+
+
+            // 2. プレビュー内容を更新 (入力内容に基づく)
+            if (!dateStr) {
+                unixRealtimeDisplay.textContent = '（日付を入力してください）';
+                return;
+            }
+            
+            // 時刻が空の場合は 00:00:00 を設定
+            if (!timeStr) {
+                timeStr = '00:00:00';
+            } else if (timeStr.length === 5) {
+                timeStr += ':00';
+            }
+
+            // Dateオブジェクトを作成 (ブラウザのタイムゾーンで処理)
+            const dateTimeStr = `${dateStr}T${timeStr}`;
+
+            try {
+                const dateObj = new Date(dateTimeStr);
+
+                if (isNaN(dateObj) || dateObj.getFullYear() < 1970) {
+                    unixRealtimeDisplay.textContent = '（無効な日時、または1970年以前の古い日時です）';
+                    return;
+                }
+
+                // スタイルに応じた表示形式を設定 (ブラウザの形式に変換)
+                let previewText;
+                const options = {};
+                const diffSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000); // 基準時刻との差
+                const absSeconds = Math.abs(diffSeconds);
+                const isFuture = diffSeconds < 0;
+
+                if (style === 'R') { // R - 相対時間
+                    if (absSeconds < 60) {
+                        previewText = "数秒" + (isFuture ? '後' : '前');
+                    } else if (absSeconds < 3600) {
+                        const minutes = Math.floor(absSeconds / 60);
+                        previewText = `${minutes}分${isFuture ? '後' : '前'}`;
+                    } else if (absSeconds < 86400) {
+                        const hours = Math.floor(absSeconds / 3600);
+                        previewText = `${hours}時間${isFuture ? '後' : '前'}`;
+                    } else if (absSeconds < 2592000) { // 約30日
+                        const days = Math.floor(absSeconds / 86400);
+                        previewText = `${days}日${isFuture ? '後' : '前'}`;
+                    } else { // 30日以上は年月日にフォールバック
+                         options.year = 'numeric'; options.month = 'long'; options.day = 'numeric';
+                         previewText = dateObj.toLocaleString(lang, options);
+                    }
+                } else { // F, f, D, d, T, t
+                    if (style === 'F') { options.year = 'numeric'; options.month = 'long'; options.day = 'numeric'; options.weekday = 'short'; options.hour = 'numeric'; options.minute = 'numeric'; } 
+                    else if (style === 'f') { options.year = 'numeric'; options.month = 'long'; options.day = 'numeric'; options.hour = 'numeric'; options.minute = 'numeric'; } 
+                    else if (style === 'D') { options.year = 'numeric'; options.month = 'long'; options.day = 'numeric'; } 
+                    else if (style === 'd') { options.year = 'numeric'; options.month = '2-digit'; options.day = '2-digit'; } 
+                    else if (style === 'T') { options.hour = 'numeric'; options.minute = 'numeric'; options.second = 'numeric'; options.hour12 = true; } 
+                    else if (style === 't') { options.hour = 'numeric'; options.minute = 'numeric'; options.hour12 = true; }
+                    previewText = dateObj.toLocaleString(lang, options);
+                }
+
+                unixRealtimeDisplay.textContent = previewText;
+
+            } catch (error) {
+                unixRealtimeDisplay.textContent = '（日付と時刻の形式にエラーがあります）';
+            }
+        }
+
+
+        // 初期値として現在の日時を設定
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+
+        dateInput.value = `${year}-${month}-${day}`;
+        timeInput.value = `${hours}:${minutes}`;
+
+        // リアルタイムプレビューをイベントに紐づけ
+        dateInput.addEventListener('input', updateUnixCodePreview);
+        timeInput.addEventListener('input', updateUnixCodePreview);
+        styleSelect.addEventListener('change', updateUnixCodePreview);
+        
+        // 相対時間(R)の正確な表示のため、毎秒更新を行う
+        setInterval(updateUnixCodePreview, 1000);
+        
+
+        // コード生成ボタン
+        convertButton.addEventListener('click', () => {
+            const dateStr = dateInput.value;
+            let timeStr = timeInput.value;
+            const style = styleSelect.value;
+
+            if (!dateStr) {
+                alert('日付を入力してください。');
+                return;
+            }
+            
+            if (!timeStr) {
+                timeStr = '00:00:00';
+            } else if (timeStr.length === 5) {
+                timeStr += ':00';
+            }
+
+            const dateTimeStr = `${dateStr}T${timeStr}`;
+
+            try {
+                const dateObj = new Date(dateTimeStr);
+
+                if (isNaN(dateObj) || dateObj.getFullYear() < 1970) {
+                     alert('無効な日時、または1970年以前の古い日時です。');
+                     resultArea.classList.add('hidden');
+                    return;
+                }
+
+                const unixTimestamp = Math.floor(dateObj.getTime() / 1000);
+                const discordCode = `<t:${unixTimestamp}:${style}>`;
+
+                outputDiscord.value = discordCode;
+                resultArea.classList.remove('hidden');
+
+            } catch (error) {
+                alert(`変換エラー: 日付と時刻の形式を確認してください。\nエラー詳細: ${error.message}`);
+                resultArea.classList.add('hidden');
+            }
+        });
+
+        copyButton.addEventListener('click', () => {
+            outputDiscord.select();
+            document.execCommand('copy');
+            alert('Discordコードをコピーしました！');
+        });
+    </script>
+</body>
+</html>
